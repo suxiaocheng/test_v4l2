@@ -1,0 +1,17 @@
+#ignore object file
+test_v4l2
+
+#ignore output file
+*.o
+*.yuv
+
+#ignore ctags file
+cscope.*
+tags
+
+#ignore backup file
+*.bak
+*~
+
+#ignore swap file
+*.swp
