@@ -41,6 +41,8 @@ static io_method io = IO_METHOD_MMAP;
 static int fd = -1;
 struct buffer *buffers = NULL;
 static unsigned int n_buffers = 0;
+static int frame_rate = 0;
+
 
 FILE *fp;
 char *filename = "test.yuv\0";
@@ -541,6 +543,22 @@ static void init_device(void)
 		init_userp(fmt.fmt.pix.sizeimage);
 		break;
 	}
+	/* set framerate */
+	if (frame_rate) {
+		struct v4l2_streamparm* setfps;  
+		setfps=(struct v4l2_streamparm *) calloc(1, sizeof(struct v4l2_streamparm));
+		memset(setfps, 0, sizeof(struct v4l2_streamparm));
+		setfps->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		setfps->parm.capture.timeperframe.numerator=1;
+		setfps->parm.capture.timeperframe.denominator=frame_rate;
+		if (ioctl(fd, VIDIOC_S_PARM, setfps) != 0) {
+			fprintf(stderr, "setting framerate to %d fail\n", frame_rate);
+		} else {
+			fprintf(stderr, "[INFO] setting framerate to %d ok\n", frame_rate);
+		}
+
+		free(setfps);
+	}
 }
 
 static void close_device(void)
@@ -587,7 +605,7 @@ static void usage(FILE * fp, int argc, char **argv)
 		"", argv[0]);
 }
 
-static const char short_options[] = "d:hmru";
+static const char short_options[] = "d:f:hmru";
 
 static const struct option long_options[] = { {"device", required_argument,
 					       NULL, 'd'}, {"help", no_argument,
@@ -635,6 +653,10 @@ int main(int argc, char **argv)
 
 		case 'u':
 			io = IO_METHOD_USERPTR;
+			break;
+
+		case 'f':
+			frame_rate = atoi(optarg);
 			break;
 
 		default:
